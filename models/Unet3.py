@@ -2,7 +2,7 @@ from tensorflow import keras
 # [pytorch-Unet3](https://github.com/ZJUGiveLab/UNet-Version),[paper](https://arxiv.org/ftp/arxiv/papers/2004/2004.08790.pdf)
 def conv_block(inputs, filters, kernel_size=3, strides=1, padding='same'):
     Z = keras.layers.Conv2D(filters, kernel_size, strides=strides, padding=padding, use_bias=False)(inputs)
-    #Z = keras.layers.BatchNormalization(axis=-1)(Z)
+    Z = keras.layers.BatchNormalization(axis=-1)(Z)
     #A = keras.layers.PReLU(shared_axes=[1, 2])(Z)
     A=keras.layers.ReLU()(Z)
     return A
@@ -11,7 +11,7 @@ def UnetConv2(inputs,filters,n=2,kernel_size=3,stride=1,padding='same'):
     x=inputs
     for i in range(0,n+1):
         x=keras.layers.Conv2D(filters,kernel_size=kernel_size,strides=(stride,stride),padding=padding, use_bias=False)(x)
-        #x=keras.layers.BatchNormalization()(x)
+        x=keras.layers.BatchNormalization()(x)
         #x=keras.layers.PReLU(shared_axes=[1, 2])(x)
         x=keras.layers.ReLU()(x)
     return x
