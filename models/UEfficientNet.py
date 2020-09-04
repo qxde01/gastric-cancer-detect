@@ -5,6 +5,8 @@ from tensorflow import keras
 #from efficientnet import EfficientNetB4
 from efficientnet.tfkeras import EfficientNetB4
 import numpy as np
+
+
 def convolution_block(x, filters, size, strides=(1,1), padding='same', activation=True):
     x = keras.layers.Conv2D(filters, size, strides=strides, padding=padding)(x)
     x = keras.layers.BatchNormalization()(x)
@@ -22,13 +24,8 @@ def residual_block(blockInput, num_filters=16):
     return x
 
 
-
-
-
-def UEfficientNet(input_shape=(256, 256, 3), dropout_rate=0.5):
-    backbone = EfficientNetB4(weights='imagenet',
-                              include_top=False,
-                              input_shape=input_shape)
+def UEfficientNetB4(input_shape=(256, 256, 3), dropout_rate=0.5,imagenet_weights='imagenet'):
+    backbone = EfficientNetB4(weights=imagenet_weights,include_top=False,input_shape=input_shape)
     input = backbone.input
     start_neurons = 8
 
@@ -69,7 +66,7 @@ def UEfficientNet(input_shape=(256, 256, 3), dropout_rate=0.5):
 
     deconv2 = keras.layers.Conv2DTranspose(start_neurons * 4, (3, 3), strides=(2, 2), padding="same")(uconv3)
     deconv2_up1 = keras.layers.Conv2DTranspose(start_neurons * 4, (3, 3), strides=(2, 2), padding="same")(deconv2)
-    conv2 = backbone.layers[92].output
+    conv2 = backbone.layers[89].output #92=>89
     uconv2 = keras.layers.concatenate([deconv2, deconv3_up1, deconv4_up2, conv2])
 
     uconv2 = keras.layers.Dropout(0.1)(uconv2)
@@ -94,12 +91,38 @@ def UEfficientNet(input_shape=(256, 256, 3), dropout_rate=0.5):
     uconv0 = residual_block(uconv0, start_neurons * 1)
     #     uconv0 = residual_block(uconv0,start_neurons * 1)
     uconv0 = keras.layers.LeakyReLU(alpha=0.1)(uconv0)
-
     uconv0 = keras.layers.Dropout(dropout_rate / 2)(uconv0)
-    output_layer = keras.layers.Conv2D(1, (1, 1), padding="same", activation="sigmoid")(uconv0)
 
-    model = keras.models.Model(input, output_layer)
+    d1=keras.layers.UpSampling2D(size=(2,2))(uconv0)
+    d1 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d1)
+    d11=keras.layers.Activation('sigmoid',name='d1')(d1)
+
+    d2 = keras.layers.UpSampling2D(size=(4, 4))(uconv1)
+    d2 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d2)
+    d22 = keras.layers.Activation('sigmoid', name='d2')(d2)
+
+    d3 = keras.layers.UpSampling2D(size=(8, 8))(uconv2)
+    d3 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d3)
+    d33 = keras.layers.Activation('sigmoid', name='d3')(d3)
+
+    d4 = keras.layers.UpSampling2D(size=(16, 16))(uconv3)
+    d4 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d4)
+    d44 = keras.layers.Activation('sigmoid', name='d4')(d4)
+
+    d5 = keras.layers.UpSampling2D(size=(32, 32))(uconv4)
+    d5 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d5)
+    d55 = keras.layers.Activation('sigmoid', name='d5')(d5)
+
+    d = keras.layers.concatenate([d1, d2, d3, d4, d5,input])
+    d = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(d)
+    d = keras.layers.Activation('sigmoid', name='d')(d)
+    model = keras.models.Model(inputs=input,outputs=[d,d11,d22,d33,d44,d55])
     #model.name = 'u-xception'
+    '''
+    Total params: 10,501,068
+    Trainable params: 10,435,420
+    Non-trainable params: 65,648
+    '''
     return model
 
 
@@ -137,23 +160,6 @@ def IOU(label, pred):
     # Tensorflow version
     return tf.py_function (get_iou_vector, [label, pred > 0.5], tf.float64)
 
-
-
-def dice_coef(y_true, y_pred):
-    y_true_f = keras.backend.flatten(y_true)
-    y_pred = keras.backend.cast(y_pred, 'float32')
-    y_pred_f = keras.backend.cast(keras.backend.greater(keras.backend.flatten(y_pred), 0.5), 'float32')
-    intersection = y_true_f * y_pred_f
-    score = 2. * keras.backend.sum(intersection) / (keras.backend.sum(y_true_f) + keras.backend.sum(y_pred_f))
-    return score
-
-def iou_binary(y_true, y_pred):
-    y_true_f = keras.backend.flatten(y_true)
-    y_pred = keras.backend.cast(y_pred, 'float32')
-    y_pred_f = keras.backend.cast(keras.backend.greater(keras.backend.flatten(y_pred), 0.5), 'float32')
-    intersection = y_true_f * y_pred_f
-    union = keras.backend.sum(y_true) + keras.backend.sum(y_pred) - intersection
-    return intersection / (union+keras.backend.epsilon())
 
 def dice_loss(y_true, y_pred):
     smooth = 1.
