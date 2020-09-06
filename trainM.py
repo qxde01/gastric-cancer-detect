@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument("--input", '-input', type=str, default='data/gastric.csv', help="train data csv")
     #parser.add_argument("--warmup", '-wp', type=int, default=1, help="warmup ")
     #parser.add_argument("--lr_scheduler",'-lrs', type=int,default=2,help="1-stage decay,2-CosineAnnealingScheduler")
-    parser.add_argument("--optimizers", '-optimizers', type=str, default='SGD', help="optimizers")
+    parser.add_argument("--optimizers", '-opt', type=str, default='SGD', help="optimizers")
     args = parser.parse_args()
     return args
 if __name__ == '__main__':
