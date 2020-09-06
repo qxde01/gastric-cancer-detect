@@ -16,3 +16,4 @@
 * [pytorch-Unet3](https://github.com/ZJUGiveLab/UNet-Version),[paper](https://arxiv.org/ftp/arxiv/papers/2004/2004.08790.pdf)
 * [keras-unet](https://github.com/zhixuhao/unet)
 * [UEfficientNetB4](https://www.kaggle.com/meaninglesslives/nested-unet-with-efficientnet-encoder)
+* [MultiResUNet](https://github.com/nibtehaz/MultiResUNet)
