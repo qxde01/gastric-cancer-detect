@@ -1,5 +1,12 @@
 # gastric-cancer-detect
 胃癌恶性病变组织检测
+
+## Library Versions
+```
+>= tensorflow 2.2
+>= tensorflow-addons 0.11
+OpenCV
+```
 ## 数据准备
 将图片路径及标签放在一个csv文件里，可以用`data.py`生成 格式如下：
 
