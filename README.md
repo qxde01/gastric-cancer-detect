@@ -11,8 +11,7 @@
 将图片路径及标签放在一个csv文件里，可以用`data.py`生成 格式如下：
 
 |filepath|label|maskpath|type|filename|
-|:---:|:---:|
-:---:|:---:|:---:|
+|:---:|:---:|:---:|:---:|:---:|
 |F:/data/cancer/0/3375.jpg|0| |train|3375.jpg| 
 |F:/data/cancer/0/0425.jpg|0| |train|0425.jpg| 
 ## 训练
