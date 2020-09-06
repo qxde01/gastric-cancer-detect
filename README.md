@@ -3,8 +3,8 @@
 
 ## Library Versions
 ```
->= tensorflow 2.2
->= tensorflow-addons 0.11
+ tensorflow >= 2.2
+ tensorflow-addons >= 0.11
 OpenCV
 ```
 ## 数据准备
