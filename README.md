@@ -16,11 +16,12 @@
 |F:/data/cancer/0/0425.jpg|0| |train|0425.jpg| 
 ## 训练
 ```python trainM.py -net U2netS -i data/gastric.csv -size 160 -epochs 100 -batch_size 4 -opt SGD -lr 0.001 ```
-## 线上评分
-|Model|ImageSize|Score|
-|:---:|:---:|:---:|
-|UEfficientNetB4|320|0.630|
-|U2netS|352|0.603|
+## 训练记录
+|Model|params|ImageSize|线下Score|线上Score|
+|:---:|:---:|:---:|:---:|:---:|
+|UEfficientNetB4|10.5M|320|-|0.630|
+|U2netS|3.73M|256|0.6944|0.6664|
+|U2netSP|4.27M|352|0.6890|0.6829|
 ## Reference
 * [“华录杯”SEED江苏大数据开发与应用大赛——癌症风险智能诊断](https://www.marsbigdata.com/competition/details?id=5815639985152)
 * [pytorch-U2Net](https://github.com/NathanUA/U-2-Net),  [paper](https://arxiv.org/pdf/2005.09007v1.pdf)
