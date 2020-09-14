@@ -34,6 +34,27 @@ def tversky(y_true, y_pred):
 def tversky_loss(y_true, y_pred):
     return 1 - tversky(y_true,y_pred)
 
+def generalized_dice_coeff(y_true, y_pred):
+    #Ncl = y_pred.shape[-1]
+    #w = K.zeros(shape=(Ncl,))
+    y_true= K.flatten(y_true)
+    y_pred= K.flatten(y_pred)
+
+    w = K.sum(y_true)
+    w = 1/(w**2+0.000001)
+    # Compute gen dice coef:
+    numerator = y_true*y_pred
+    numerator = w*K.sum(numerator)
+    numerator = K.sum(numerator)
+    denominator = y_true+y_pred
+    denominator = w*K.sum(denominator)
+    denominator = K.sum(denominator)
+    gen_dice_coef = (2*numerator+1.)/(denominator+1.)
+    return gen_dice_coef
+
+def generalized_dice_loss(y_true, y_pred):
+    return 1 - generalized_dice_coeff(y_true, y_pred)
+
 def focal_tversky(y_true,y_pred):
     pt_1 = tversky(y_true, y_pred)
     gamma = 0.75
