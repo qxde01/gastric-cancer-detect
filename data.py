@@ -2,10 +2,10 @@ import os,math
 import pandas as pd
 import numpy as np
 from tensorflow import keras
-import tensorflow.keras.backend as K
+#import tensorflow.keras.backend as K
 import cv2
 #import Augmentor
-data_base='F:/data/mars/cancer/'
+#data_base='F:/data/mars/cancer/'
 
 def getData(data_base):
     flist1=os.listdir(data_base+'0/')
@@ -18,6 +18,7 @@ def getData(data_base):
     flist2['filepath']=[x.replace('_mask','') for x in flist2.maskpath]
     flist2['label']=1
     df=pd.concat([flist1[['filepath','label','maskpath']],flist2[['filepath','label','maskpath']]])
+    df['filename'] = [x.split('/')[-1] for x in df.filepath.values]
     df=df.sample(frac=1)
     ns=int(df.shape[0]*0.8)
     df['type']='train'
@@ -28,12 +29,45 @@ def getData(data_base):
     test['filename'] = flist3
     return df,test
 
+def bandFilter(img,w=2,radius=100):
+    #傅里叶变换
+    dft = cv2.dft(np.float32(img), flags = cv2.DFT_COMPLEX_OUTPUT)
+    fshift = np.fft.fftshift(dft)
+    #设置带通滤波器
+    # w 带宽
+    # radius: 带中心到频率平面原点的距离
+    rows, cols = img.shape
+    crow,ccol = int(rows/2), int(cols/2) #中心位置
+    #w = 25
+    #radius =25
+    mask = np.ones((rows, cols, 2), np.uint8)
+    for i in range(0, rows):
+        for j in range(0, cols):
+            # 计算(i, j)到中心点的距离
+            d = math.sqrt(pow(i - crow, 2) + pow(j - ccol, 2))
+            if radius - w / 2 < d < radius + w / 2:
+                mask[i, j, 0] = mask[i, j, 1] = 0
+            else:
+                mask[i, j, 0] = mask[i, j, 1] = 1
+    #掩膜图像和频谱图像乘积
+    f = fshift * mask
+    #傅里叶逆变换
+    ishift = np.fft.ifftshift(f)
+    iimg = cv2.idft(ishift)
+    res = cv2.magnitude(iimg[:,:,0], iimg[:,:,1])
+    res = 255 * (res - res.min()) / (res.max() - res.min())
+    return res.astype(np.uint8)
 
 def preprocess_input(x):
-    if x.dtype not in ['float32', 'float64', 'float']:
-        x = x.astype(np.float32)
+    #[:,:,0]=bandFilter(x[:,:,0],w=2,radius=100)
+    #x[:, :, 1] = bandFilter(x[:, :, 1], w=2, radius=100)
+    #x[:, :, 2] = bandFilter(x[:, :, 2], w=2, radius=100)
+    #if x.dtype not in ['float32', 'float64', 'float']:
+    x = x.astype(np.float32)
     x /= 127.5
     x -= 1.
+    #x /=255.
+    #x=0.01+0.98*x
     return x
 
 def randomCrop(img, crop_shape=(224,224),size=256 ):
@@ -187,9 +221,25 @@ class DataGeneratorM(keras.utils.Sequence):
                 mask = cv2.resize(mask, (self.size, self.size), cv2.INTER_CUBIC)
             else:
                 rank = np.random.randint(0, 100) / 100
-                if rank > 0.3:
+                if rank > 0.85:
                     size1 = np.random.randint(self.size + 1, 1 + int(self.size * 1.1))
                     image,mask = randomCropMask(image,mask, crop_shape=(self.size, self.size), size=size1)
+                elif rank >0.75 and rank <0.85:
+                    image = cv2.resize(image, (self.size, self.size), cv2.INTER_CUBIC)
+                    mask = cv2.resize(mask, (self.size, self.size), cv2.INTER_CUBIC)
+                    image = np.fliplr(image)
+                    mask=np.fliplr(mask)
+                elif rank >0.65 and rank <0.75:
+                    image = cv2.resize(image, (self.size, self.size), cv2.INTER_CUBIC)
+                    mask = cv2.resize(mask, (self.size, self.size), cv2.INTER_CUBIC)
+                    image = np.flipud(image)
+                    mask=np.flipud(mask)
+                elif rank > 0.2 and rank <0.65:
+                    image = cv2.resize(image, (self.size, self.size), cv2.INTER_CUBIC)
+                    mask = cv2.resize(mask, (self.size, self.size), cv2.INTER_CUBIC)
+                    center = cv2.getRotationMatrix2D((self.size / 2, self.size / 2), np.random.randint(10, 180, 1), 1)
+                    image = cv2.warpAffine(image, center, (self.size, self.size))
+                    mask = cv2.warpAffine(mask, center, (self.size, self.size))
                 else:
                     image = cv2.resize(image, (self.size, self.size), cv2.INTER_CUBIC)
                     mask = cv2.resize(mask, (self.size, self.size), cv2.INTER_CUBIC)
@@ -207,51 +257,6 @@ class DataGeneratorM(keras.utils.Sequence):
             self.data=self.data.sample(frac=1)
             self.data.index=[i for i in range(0,self.samples_num)]
 
-def iou(y_true, y_pred, label=0):
-    """
-    Return the Intersection over Union (IoU) for a given label.
-    Args:
-        y_true: the expected y values as a one-hot
-        y_pred: the predicted y values as a one-hot or softmax output
-        label: the label to return the IoU for
-    Returns:
-        the IoU for the given label
-    """
-    # extract the label values using the argmax operator then
-    # calculate equality of the predictions and truths to the label
-    y_true = K.cast(K.equal(K.argmax(y_true), label), K.floatx())
-    y_pred = K.cast(K.equal(K.argmax(y_pred), label), K.floatx())
-    #y_pred = K.cast(K.greater(y_pred, 0.5), K.floatx())
-    # calculate the |intersection| (AND) of the labels
-    intersection = K.sum(y_true * y_pred)
-    # calculate the |union| (OR) of the labels
-    union = K.sum(y_true) + K.sum(y_pred) - intersection
-    # avoid divide by zero - if the union is zero, return 1
-    # otherwise, return the intersection over union
-    return K.switch(K.equal(union, 0), 1.0, intersection / union)
-
-
-def mean_iou(y_true, y_pred):
-    """
-    Return the Intersection over Union (IoU) score.
-    Args:
-        y_true: the expected y values as a one-hot
-        y_pred: the predicted y values as a one-hot or softmax output
-    Returns:
-        the scalar IoU value (mean over all labels)
-    """
-    # get number of labels to calculate IoU for
-    num_labels = K.int_shape(y_pred)[-1] #- 1
-    #print(num_labels)
-    # initialize a variable to store total IoU in
-    mean_iou =0.0 # K.variable(0.0)
-
-    # iterate over labels to calculate IoU for
-    for label in range(num_labels):
-        mean_iou = mean_iou + iou(y_true, y_pred, label)
-
-    # divide total IoU by number of labels to get mean IoU
-    return mean_iou / num_labels
 
 
 if __name__ == '__main__':
