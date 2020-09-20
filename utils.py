@@ -50,14 +50,13 @@ def dice_np(y_true, y_pred,a=0.5):
 def find_best_dice(y_true, y_pred,step=0.001):
     bst=0.
     alpha=0.
-    for a in np.arange(0, 1., step):
+    for a in np.arange(0.1, 0.7, step):
         score=dice_np(y_true, y_pred, a=a)
         if score>bst:
             bst=score
             alpha=a
-            print(a,score)
+            print('%.4f,%.8f' %(a,score) )
     return bst,alpha
-
 
 
 
@@ -132,7 +131,7 @@ def find_alpha(y_true,y_pred,step=0.01):
             print('alpha:%.6f,F1:%.6f,Recall:%.6f,Precision:%.6f'%(alpha,f1,recall,precision) )
     out=pd.DataFrame(out,columns=['alpha','F1','Recall','Precision'])
     print(out[out.alpha==alpha])
-    print(out[out.Precision == out.Precision.max()])
+    #print(out[out.Precision == out.Precision.max()])
     return out
 
 
