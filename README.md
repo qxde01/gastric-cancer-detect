@@ -16,6 +16,10 @@
 |F:/data/cancer/0/0425.jpg|0| |train|0425.jpg| 
 ## 训练
 ```python trainM.py -net U2netS -i data/gastric.csv -size 160 -epochs 100 -batch_size 4 -opt SGD -lr 0.001 ```
+## 评估并生成测试机结果
+```python inferM.py -net U2netS   -size 160   -p saved/xxxx_model.h5 -o 1   ```
+
+
 ## 训练记录
 |Model|params|ImageSize|线下Score|线上Score|
 |:---:|:---:|:---:|:---:|:---:|
