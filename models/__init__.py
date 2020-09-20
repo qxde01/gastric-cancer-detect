@@ -6,6 +6,7 @@ from .UEfficientNet import UEfficientNetB4
 from .UMFacenet2 import UMFacenet
 from .SqueezeUNet import SqueezeUNet
 from .mobilenet_v3 import MobileNetV3Small
+from .deeplab_v3 import Deeplabv3
 
 def build_model(size=256,net='U2netS'):
     if net=='U2netS':
@@ -30,6 +31,8 @@ def build_model(size=256,net='U2netS'):
         model=SqueezeUNet(input_shape=(size, size, 3))
     elif net =='MobileNetV3Small':
         model=MobileNetV3Small(input_shape=(size, size, 3))
+    elif net=='Deeplabv3':
+        model = Deeplabv3(input_shape=(size, size, 3), classes=1,backbone='mobilenetv2', OS=16, alpha=1., activation='sigmoid')
     else:
         print(' not support your net .')
         sys.exit()
