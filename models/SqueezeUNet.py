@@ -58,21 +58,21 @@ def SqueezeUNet(input_shape=(256,256,3)):
     #x = fire_module(x, fire_id=8, squeeze=64, expand=256) #13, 13, 512
     f10 = fire_module(f10, fire_id=9, squeeze=64, expand=filters[4]) # shape=(None, 16, 16, 512)
 
-    up5=keras.layers.Conv2DTranspose(filters[4],kernel_size=3,strides=(2,2),padding='same')(f10) #shape=(None, 32, 32, 512)
+    up5=keras.layers.Conv2DTranspose(filters[4],kernel_size=1,strides=(2,2),padding='same')(f10) #shape=(None, 32, 32, 512)
     up5d=keras.layers.Add()([up5,f9])
     up5d = fire_module(up5d, fire_id=10, squeeze=48, expand=filters[3]) #shape=(None, 32, 32, 384)
 
-    up4 = keras.layers.Conv2DTranspose(filters[3], kernel_size=3, strides=(2, 2), padding='same')(up5d) #shape=(None, 64, 64, 384)
+    up4 = keras.layers.Conv2DTranspose(filters[3], kernel_size=1, strides=(2, 2), padding='same')(up5d) #shape=(None, 64, 64, 384)
     up4d = keras.layers.Add()([up4, f6])
     up4d = fire_module(up4d, fire_id=11, squeeze=32, expand=filters[2])
 
-    up3 = keras.layers.Conv2DTranspose(filters[2], kernel_size=3, strides=(2, 2), padding='same')(up4d) #shape=(None, 128, 128, 256)
+    up3 = keras.layers.Conv2DTranspose(filters[2], kernel_size=1, strides=(2, 2), padding='same')(up4d) #shape=(None, 128, 128, 256)
     up3d = keras.layers.Add()([up3, f3])
 
     up3d = fire_module(up3d, fire_id=12, squeeze=16, expand=filters[1])
     #up3d = fire_module(up3d, fire_id=13, squeeze=16, expand=128)
 
-    up20 = keras.layers.Conv2DTranspose(filters[1], kernel_size=3, strides=(2, 2), padding='same')(up3d)
+    up20 = keras.layers.Conv2DTranspose(filters[1], kernel_size=1, strides=(2, 2), padding='same')(up3d)
     up2 = keras.layers.Conv2D(filters[0], (3, 3), strides=(1, 1), padding='same', use_bias=True, kernel_initializer='he_normal', name='conv_up2')(up20)
     up2 = keras.layers.BatchNormalization(axis=-1, momentum=0.95, epsilon=1e-5, name='conv_up2_bn')(up2)
     up2 = keras.layers.LeakyReLU()(up2)
@@ -83,19 +83,19 @@ def SqueezeUNet(input_shape=(256,256,3)):
     d2 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(up20)
     d22 = keras.layers.Activation('sigmoid', name='d2')(d2)
 
-    d3 = keras.layers.Conv2DTranspose(filters[1], kernel_size=3, strides=(2, 2), padding='same')(up3d)
+    d3 = keras.layers.Conv2DTranspose(filters[1], kernel_size=1, strides=(2, 2), padding='same')(up3d)
     d3 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d3)
     d33 = keras.layers.Activation('sigmoid', name='d3')(d3)
 
-    d4 = keras.layers.Conv2DTranspose(filters[2], kernel_size=3, strides=(2, 2), padding='same')(up4d)
+    d4 = keras.layers.Conv2DTranspose(filters[2], kernel_size=1, strides=(2, 2), padding='same')(up4d)
     #d4 = keras.layers.Conv2DTranspose(256, kernel_size=3, strides=(2, 2), padding='same')(d4)
     d4 = keras.layers.UpSampling2D(size=(2, 2))(d4)
     d4 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d4)
     d44 = keras.layers.Activation('sigmoid', name='d4')(d4)
 
-    d5 = keras.layers.Conv2DTranspose(filters[3], kernel_size=3, strides=(2, 2), padding='same')(up5d)
+    d5 = keras.layers.Conv2DTranspose(filters[3], kernel_size=1, strides=(2, 2), padding='same')(up5d)
     #d5 = keras.layers.Conv2DTranspose(384, kernel_size=3, strides=(2, 2), padding='same')(d5) #1327488
-    d5 = keras.layers.Conv2DTranspose(filters[3], kernel_size=3, strides=(2, 2), padding='same')(d5) #1327488
+    d5 = keras.layers.Conv2DTranspose(filters[3], kernel_size=1, strides=(2, 2), padding='same')(d5) #1327488
     d5=keras.layers.UpSampling2D(size=(2,2))(d5)
     d5 = keras.layers.Conv2D(1, (3, 3), padding="same", activation=None, use_bias=False)(d5)
     d55 = keras.layers.Activation('sigmoid', name='d5')(d5)
