@@ -2,7 +2,24 @@ import tensorflow.keras.backend as K
 import tensorflow as tf
 from tensorflow import keras
 
-
+def getLoss(name='bce_dice_focal'):
+    if name=='bce_dice_focal':
+        return bce_dice_focal_loss
+    elif name=='bce_focal':
+        return bce_focal_loss
+    elif name=='bce_tversky':
+        return bce_tversky_loss
+    elif name=='focal':
+        return focal_loss
+    elif name=='bce_dice':
+        return  bce_dice_loss
+    elif name=='bce':
+        return keras.losses.binary_crossentropy
+    elif name=='dice':
+        return dice_loss
+    else:
+        return bce_dice_focal_loss
+    
 def focal_loss(y_true, y_pred):
     gamma = 2
     alpha = 0.25
