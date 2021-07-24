@@ -394,6 +394,92 @@ def U2netM(input_shape=(320,320,3)):
     '''
     model=keras.models.Model(inputs=inputs,outputs=[d,d11,d22,d33,d44,d55])
     return model
+
+
+def U2netSP(input_shape=(320,320,3),drop_rate=0.35):
+    inputs = keras.layers.Input(shape=input_shape)
+    hx1 = RSU7(inputs, 32, 64)  # shape=(None, 320, 320, 16)
+    hx = keras.layers.MaxPool2D(pool_size=(2, 2))(hx1)
+    if drop_rate>0.:
+        hx=keras.layers.Dropout(drop_rate)(hx)
+    hx2 = RSU6(hx, 32, 64)  # shape=(None, 160, 160, 16)
+    hx = keras.layers.MaxPool2D(pool_size=(2, 2))(hx2)
+    if drop_rate>0.:
+        hx=keras.layers.Dropout(drop_rate)(hx)
+    hx3 = RSU5(hx, 32, 64)  # shape=(None, 80, 80, 16)
+    hx = keras.layers.MaxPool2D(pool_size=(2, 2))(hx3)  # shape=(None, 40, 40, 16)
+    if drop_rate>0.:
+        hx=keras.layers.Dropout(drop_rate)(hx)
+    hx4 = RSU4(hx, 32, 64)  # shape=(None, 40, 40, 16)
+    hx = keras.layers.MaxPool2D(pool_size=(2, 2))(hx4)
+
+    hx5 = RSU4F(hx, 32, 32)  # shape=(None, 20, 20, 16)
+    hx = keras.layers.MaxPool2D(pool_size=(2, 2))(hx5)  # shape=(None, 10, 10, 16
+    if drop_rate>0.:
+        hx=keras.layers.Dropout(drop_rate)(hx)
+    hx6 = RSU4F(hx, 32, 32)  # shape=(None, 10, 10, 16)
+    hx6up = keras.layers.UpSampling2D(size=(2, 2),interpolation='bilinear')(hx6)
+
+    hx5d = keras.layers.concatenate([hx6up, hx5])
+    hx5d = RSU4F(hx5d, 32, 32)
+    hx5up = keras.layers.UpSampling2D(size=(2, 2))(hx5d)
+
+    hx4d = keras.layers.concatenate([hx5up, hx4])
+    #if drop_rate>0.:
+    #    hx4d=keras.layers.Dropout(drop_rate)(hx4d)
+    hx4d = RSU4(hx4d, 32, 64)
+    hx4up = keras.layers.UpSampling2D(size=(2, 2),interpolation='bilinear')(hx4d)
+
+    hx3d = keras.layers.concatenate([hx4up, hx3])
+    hx3d = RSU5(hx3d, 32, 64)
+    hx3up = keras.layers.UpSampling2D(size=(2, 2),interpolation='bilinear')(hx3d)
+
+    hx2d = keras.layers.concatenate([hx3up, hx2])
+    #if drop_rate>0.:
+    #    hx2d=keras.layers.Dropout(drop_rate)(hx2d)
+    hx2d = RSU6(hx2d, 32, 64)
+    hx2up = keras.layers.UpSampling2D(size=(2, 2),interpolation='bilinear')(hx2d)
+
+    hx1d = keras.layers.concatenate([hx2up, hx1])
+    #if drop_rate>0.:
+    #    hx1d=keras.layers.Dropout(drop_rate)(hx1d)
+
+    hx1d = RSU7(hx1d, 32, 64)
+
+    d1 = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(hx1d)
+    d11 = keras.layers.Activation('sigmoid', name='d1')(d1)
+
+    d2 = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(hx2d)
+    d2 = keras.layers.UpSampling2D(size=(2, 2),interpolation='bilinear')(d2)
+    d22 = keras.layers.Activation('sigmoid', name='d2')(d2)
+
+    d3 = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(
+        hx3d)  # shape=(None, 80, 80, 1)
+    d3 = keras.layers.UpSampling2D(size=(4, 4),interpolation='bilinear')(d3)
+    d33 = keras.layers.Activation('sigmoid', name='d3')(d3)
+
+    d4 = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(
+        hx4d)  # shape=(None, 40, 40, 1)
+    d4 = keras.layers.UpSampling2D(size=(8, 8))(d4)
+    d44 = keras.layers.Activation('sigmoid', name='d4')(d4)
+
+    d5 = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(
+        hx5d)  # shape=(None, 20, 20, 1)
+    d5 = keras.layers.UpSampling2D(size=(16, 16),interpolation='bilinear')(d5)
+    d55 = keras.layers.Activation('sigmoid', name='d5')(d5)
+
+    d = keras.layers.concatenate([d1, d2, d3, d4, d5,inputs])
+    d = keras.layers.Conv2D(1, kernel_size=3, activation=None, padding='same', use_bias=False)(d)
+    d = keras.layers.Activation('sigmoid', name='d')(d)
+    '''
+     Total params: 4,274,504
+     Trainable params: 4,262,728
+     Non-trainable params: 11,776
+    '''
+    model = keras.models.Model(inputs=inputs, outputs=[d, d11, d22, d33, d44, d55])
+    return model
+
+
 if __name__ == "__main__":
     import os
     #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
