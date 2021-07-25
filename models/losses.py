@@ -1,6 +1,7 @@
 import tensorflow.keras.backend as K
 import tensorflow as tf
 from tensorflow import keras
+from cldice_loss import soft_clDice_loss,soft_dice_cldice_loss
 
 def getLoss(name='bce_dice_focal'):
     if name=='bce_dice_focal':
@@ -17,6 +18,8 @@ def getLoss(name='bce_dice_focal'):
         return keras.losses.binary_crossentropy
     elif name=='dice':
         return dice_loss
+    elif name=='cldice':
+        return soft_dice_cldice_loss()
     else:
         return bce_dice_focal_loss
     
