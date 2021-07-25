@@ -34,3 +34,4 @@
 * [keras-unet](https://github.com/zhixuhao/unet)
 * [UEfficientNetB4](https://www.kaggle.com/meaninglesslives/nested-unet-with-efficientnet-encoder)
 * [MultiResUNet](https://github.com/nibtehaz/MultiResUNet)
+* [clDice](https://github.com/jocpae/clDice)
