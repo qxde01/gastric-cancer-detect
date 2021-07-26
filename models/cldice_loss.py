@@ -14,7 +14,7 @@ def soft_erode(img):
     if len(img.shape)==4:
         p1 = -KL.MaxPool2D(pool_size=(3, 1), strides=(1,  1), padding='same', data_format=None)(-img)
         p2 = -KL.MaxPool2D(pool_size=(1, 3), strides=(1,  1), padding='same', data_format=None)(-img)
-        return tf.math.maximum(p1,p2)
+        return tf.math.minimum(p1,p2)
     elif len(img.shape) == 5:
         p1 = -KL.MaxPool3D(pool_size=(3, 3, 1), strides=(1, 1, 1), padding='same', data_format=None)(-img)
         p2 = -KL.MaxPool3D(pool_size=(3, 1, 3), strides=(1, 1, 1), padding='same', data_format=None)(-img)
