@@ -1,5 +1,5 @@
-from tf.keras import layers as KL
-from tf.keras import backend as K
+from tensorflow.keras import layers as KL
+from tensorflow.keras import backend as K
 import numpy as np
 import tensorflow as tf
 #from .soft_skeleton import soft_skel
@@ -99,8 +99,8 @@ def soft_dice(y_true, y_pred):
         [float32]: [loss value]
     """
     smooth = 1
-    intersection = K.sum((y_true * y_pred)[:,1:,:,:,:])
-    coeff = (2. *  intersection + smooth) / (K.sum(y_true[:,1:,:,:,:]) + K.sum(y_pred[:,1:,:,:,:]) + smooth)
+    intersection = K.sum((y_true * y_pred)[:,1:,...])
+    coeff = (2. *  intersection + smooth) / (K.sum(y_true[:,1:,...]) + K.sum(y_pred[:,1:,...]) + smooth)
     return (1. - coeff)
 
 
